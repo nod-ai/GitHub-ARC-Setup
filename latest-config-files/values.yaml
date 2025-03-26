@@ -23,7 +23,7 @@ template:
         command: ["/home/runner/run.sh"]
         resources:
           requests:
-            cpu: 45000m
+            cpu: 40000m
             memory: 50000Mi
         env:
           - name: DOCKER_HOST
