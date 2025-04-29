@@ -1,0 +1,55 @@
+controllerServiceAccount:
+  name: arc-gha-rs-controller
+  namespace: arc-systems
+githubConfigSecret:
+  github_token: <redacted token, use kubernetes secret variable instead>
+githubConfigUrl: https://github.com/iree-org/iree
+template:
+  spec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/os
+              operator: In
+              values:
+              - windows
+    containers:
+    - command:
+      - cmd.exe
+      - /c
+      - \home\runner\run.cmd
+      image: ghcr.io/eliasj42/arc-windows-runner:latest
+      name: runner
+      resources:
+        limits:
+          ephemeral-storage: 100Gi
+          memory: 92Gi
+        requests:
+          ephemeral-storage: 10Gi
+          memory: 92Gi
+      volumeMounts:
+      - name: tmpbuild-dir
+        mountPath: "b:"
+      - name: src-ccache-dir
+        mountPath: /home/runner/_work
+      - name: azure-disk
+        mountPath: /mnt/azure
+    tolerations:
+    - effect: NoSchedule
+      key: kubernetes.io/os
+      operator: Equal
+      value: windows
+    - effect: NoSchedule
+      key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: spot
+    volumes:
+    - name: tmpbuild-dir
+      emptyDir: {}
+    - name: src-ccache-dir
+      emptyDir: {}
+    - name: azure-disk
+      emptyDir: {}
+
