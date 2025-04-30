@@ -1,3 +1,5 @@
+githubConfigUrl: https://github.com/iree-org
+githubConfigSecret: "iree-secret"
 ## maxRunners is the max number of runners the auto scaling runner set will scale up to.
 maxRunners: 30
 
