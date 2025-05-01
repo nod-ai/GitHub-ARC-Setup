@@ -1,0 +1,75 @@
+# Cluster: Azure SaiScale Kubernetes Cluster
+# Deployment command:
+# helm upgrade --install "azure-linux-scale" --namespace "arc-runners" --create-namespace oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set -f <path-to-this-file>
+githubConfigUrl: https://github.com/iree-org
+githubConfigSecret: "iree-secret"
+## maxRunners is the max number of runners the auto scaling runner set will scale up to.
+maxRunners: 30
+
+## minRunners is the min number of idle runners. The target number of runners created will be
+## calculated as a sum of minRunners and the number of jobs assigned to the scale set.
+minRunners: 3
+
+template:
+  spec:
+    initContainers:
+      - name: init-dind-externals
+        image: ghcr.io/saienduri/ghascale:main
+        imagePullPolicy: Always
+        command:
+          ["cp", "-r", "/home/runner/externals/.", "/home/runner/tmpDir/"]
+        volumeMounts:
+          - name: dind-externals
+            mountPath: /home/runner/tmpDir
+      - name: dind
+        image: ghcr.io/saienduri/dind:main
+        restartPolicy: Always
+        command: ["sh", "-c"]
+        args:
+          - |
+            dockerd --host=unix:///var/run/docker.sock --group=${DOCKER_GROUP_GID} &
+            until docker info >/dev/null 2>&1; do sleep 5; done
+            tail -f /dev/null
+        env:
+          - name: DOCKER_GROUP_GID
+            value: "123"
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: work
+            mountPath: /home/runner/_work
+          - name: dind-sock
+            mountPath: /var/run
+          - name: dind-externals
+            mountPath: /home/runner/externals
+    containers:
+      - name: runner
+        image: ghcr.io/saienduri/ghascale:main
+        imagePullPolicy: Always
+        command:
+          - /bin/sh
+          - -c
+          - |
+            # Wait for Docker to be ready before starting runner
+            echo "Waiting for docker..."
+            until docker info >/dev/null 2>&1; do sleep 5; done
+            /home/runner/run.sh
+        resources:
+          requests:
+            cpu: 40000m
+            memory: 50000Mi
+        env:
+          - name: DOCKER_HOST
+            value: unix:///var/run/docker.sock
+        volumeMounts:
+          - name: work
+            mountPath: /home/runner/_work
+          - name: dind-sock
+            mountPath: /var/run
+    volumes:
+      - name: work
+        emptyDir: {}
+      - name: dind-sock
+        emptyDir: {}
+      - name: dind-externals
+        emptyDir: {}
