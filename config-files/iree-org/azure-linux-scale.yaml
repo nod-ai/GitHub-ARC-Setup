@@ -1,3 +1,6 @@
+# Cluster: Azure SaiScale Kubernetes Cluster
+# Deployment command:
+# helm upgrade --install "azure-linux-scale" --namespace "arc-runners" --create-namespace oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set -f <path-to-this-file>
 githubConfigUrl: https://github.com/iree-org
 githubConfigSecret: "iree-secret"
 ## maxRunners is the max number of runners the auto scaling runner set will scale up to.
