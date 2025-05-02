@@ -1,4 +1,4 @@
-# Cluster: OSSCI Cluster
+# Cluster: OSSCI Conductor Cluster
 # Deployment command:
 # sudo helm upgrade --install "linux-mi300-2gpu-ossci-iree-org"     --namespace "arc-runner-test-nfs" oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set -f <path-to-this-file>
 

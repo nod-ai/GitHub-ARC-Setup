@@ -1,4 +1,4 @@
-# Cluster: AKS
+# Cluster: AKS pduks-dcgpu-app-aks1
 # Deployment command:
 # sudo helm upgrade --install "linux.rocm.gpu.mi300.2"     --namespace "pytorch-2-gpu" oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set -f <path-to-this-file>
 

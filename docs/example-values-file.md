@@ -42,6 +42,7 @@ template:
 ```
 - Adds the runners to the supplemental group ID 110
 - This is necessary on the Kubernetes cluster, because 110 is needed to run rocminfo in that environment
+- On this specific cluster, the runner needs access to group 110 to access the kdf file. Other runners will probably not need 110 specifically, but use this as a template if  you need access to an irregular group
 
 #### Node Selection
 
@@ -86,7 +87,7 @@ initContainers:
 - Sets up the Docker socket at `/var/run/docker.sock`
 - Configures Docker to use a specific group ID (123)
 - Waits until Docker is fully initialized
-- Keeps the container running with `tail -f /dev/null`
+- Keeps the container running with `restartPolicy: Always`
 
 Additional Docker-in-Docker configuration:
 - Uses privileged mode (required for Docker-in-Docker)
@@ -126,6 +127,7 @@ command:
 - Creates a device mapping configuration for Docker containers that will run inside
 - Waits for Docker to be ready before starting the runner
 - Launches the runner with `/home/runner/run.sh`
+- This is required to preserve which gpus the runners have access to, as before the container was running in `privileged`
 
 #### Resource Allocation
 

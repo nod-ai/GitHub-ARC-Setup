@@ -1,3 +1,8 @@
+# Cluster: AKS pduks-dcgpu-app-aks1
+# Deployment command:
+# sudo helm upgrade --install "amd-gfx942"     --namespace "arc-gpu-1-triton-lang-triton" oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set -f <path-to-this-file>
+
+
 githubConfigSecret: "triton-secret"
 githubConfigUrl: "https://github.com/triton-lang"
 runnerGroup: "mi300x-runner-set"
