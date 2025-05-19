@@ -70,10 +70,22 @@ template:
           - |
             devices=$(ls -la /dev/dri/ | grep renderD | awk '{print $10}')
             GHA_RENDER_DEVICES="--group-add 110"
+            ROCR_VISIBLE_DEVICES=""
             for device in $devices; do
-              GHA_RENDER_DEVICES="${GHA_RENDER_DEVICES} --device /dev/dri/${device}"
+                GHA_RENDER_DEVICES="${GHA_RENDER_DEVICES} --device /dev/dri/${device}"
+                # Also Set the GPU isolation environment variables. Ref: https://rocm.blogs.amd.com/software-tools-optimization/compute-memory-modes/README.html
+                GPU_XCD=$(echo "${device}" | tr -d -c 0-9)
+                PHYSICAL_GPU_NUMBER=$(( GPU_XCD % 128 / 8))
+                if [ -z "${ROCR_VISIBLE_DEVICES}" ]; then
+                    ROCR_VISIBLE_DEVICES="${PHYSICAL_GPU_NUMBER}"
+                else
+                    ROCR_VISIBLE_DEVICES="${ROCR_VISIBLE_DEVICES},${PHYSICAL_GPU_NUMBER}"
+                fi
             done
             echo "${GHA_RENDER_DEVICES}" > /etc/podinfo/gha-render-devices
+            echo "ROCR_VISIBLE_DEVICES=${ROCR_VISIBLE_DEVICES}" > /etc/podinfo/gha-gpu-isolation-settings
+            echo "HIP_VISIBLE_DEVICES=0" >> /etc/podinfo/gha-gpu-isolation-settings
+            
             # Wait for Docker to be ready before starting runner
             echo "Waiting for docker..."
             until docker info >/dev/null 2>&1; do sleep 5; done
