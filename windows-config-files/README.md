@@ -15,7 +15,7 @@ az aks get-credentials --resource-group <resource_group_name> --name <cluster_na
 
 ## Step 3
 
-apply a taint, so that the cluster knows to assing workflows to the windows node pool
+apply a taint, so that the cluster knows to assign workflows to the windows node pool
 
 ```
 kubectl taint nodes aksusrpl000000 'kubernetes.io/os=windows:NoSchedule'
