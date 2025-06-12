@@ -1,0 +1,77 @@
+## Note to access the cluster where this is currently deployed and via azure cli: 
+# az login
+# az account set --subscription "AMD-GIS_PRD-Enterprise"
+# az aks get-credentials --admin --name SaiScale --resource-group pdue-nod-ai-rg
+#
+## To export:
+# helm get values azure-linux-scale-rocm -n arc-rocm-linux-runners -o yaml > cur_azure-linux-scale-rocm.yaml
+#
+## REDACT `github_app_private_key` or any keys if committing to repo!
+## TODO: ideally should be using secrets with `kubectl`
+
+githubConfigSecret:
+  github_app_id: "1166088"
+  github_app_installation_id: "62065164"
+  github_app_private_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    <redacted base64 key>
+    -----END RSA PRIVATE KEY-----
+githubConfigUrl: https://github.com/ROCm
+minRunners: 1
+template:
+  spec:
+    containers:
+    - command:
+      - /home/runner/run.sh
+      env:
+      - name: DOCKER_HOST
+        value: unix:///var/run/docker.sock
+      image: ghcr.io/saienduri/ghascale:main
+      imagePullPolicy: Always
+      name: runner
+      resources:
+        requests:
+          cpu: 40000m
+          memory: 50000Mi
+      volumeMounts:
+      - mountPath: /home/runner/_work
+        name: work
+      - mountPath: /var/run
+        name: dind-sock
+    - args:
+      - dockerd
+      - --host=unix:///var/run/docker.sock
+      - --group=$(DOCKER_GROUP_GID)
+      env:
+      - name: DOCKER_GROUP_GID
+        value: "123"
+      image: docker:dind
+      name: dind
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/runner/_work
+        name: work
+      - mountPath: /var/run
+        name: dind-sock
+      - mountPath: /home/runner/externals
+        name: dind-externals
+    initContainers:
+    - command:
+      - cp
+      - -r
+      - /home/runner/externals/.
+      - /home/runner/tmpDir/
+      image: ghcr.io/saienduri/ghascale:main
+      imagePullPolicy: Always
+      name: init-dind-externals
+      volumeMounts:
+      - mountPath: /home/runner/tmpDir
+        name: dind-externals
+    volumes:
+    - emptyDir: {}
+      name: work
+    - emptyDir: {}
+      name: dind-sock
+    - emptyDir: {}
+      name: dind-externals
