@@ -9,13 +9,10 @@ Choose your resource group and cluster name and proceed with default options for
 Next, you should be in the Node Pools section. You will see two node pools (userpool and agentpool).
 The agentpool is in System mode and is designed to host the critical system pods that Kubernetes needs to operate.
 The userpool is the one we care about. It is in user mode and used is designed to host the applications and workloads that we deploy to our Kubernetes cluster.
-The userpool is where our github actions jobs will be dispatched. The default VM being used for these nodes is Standard_D8ds_v5. This only has 8 cores, and we need more for our IREE project.
-Delete the userpool and create a new pool. For Node Size, select `Standard F48s v2`. Also, make sure to select the `Autoscale` option.
-I went with this VM because out of all the 48 core ones, it is the only one that is optimized for compute (performance), lacking in memory/storage (which we don't need), and costs $1.67/hr.
+The userpool is where our github actions jobs will be dispatched. The default VM being used for these nodes is Standard_D8ds_v5. This only has 8 cores, and we need more for our IREE/ROCm projects.
 
-<img width="853" alt="image" src="https://github.com/user-attachments/assets/08076afe-772c-4702-a3e2-39066494b2b9">
-
-
+We ended up creating two user node pools with the `Standard_D96as_v5` (96 cpu cores) and `Standard_D48as_v4` (48 cpu cores) instance sizes.
+Based on the resource reqeuests section of the [`azure-linux-scale-rocm.yaml`](./config-files/iree-org/azure-linux-scale.yaml) and [`azure-linux-scale-rocm.yaml`](./config-files/rocm/azure-linux-scale-rocm.yaml) values files for example, you can extrapolate how many pods can run in parallel on a node.
 
 For the rest of the cluster creation options you can choose the default.
 
