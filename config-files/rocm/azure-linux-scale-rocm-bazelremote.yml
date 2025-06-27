@@ -1,0 +1,61 @@
+# This configuration has been reported as working with k8s >= 1.24
+# adapted from https://github.com/buchgr/bazel-remote/blob/master/examples/kubernetes.yml
+# kubectl create namespace bazelremote-ns
+# kubectl apply -f azure-linux-scale-rocm-bazelremote.yml -n bazelremote-ns
+# kubectl apply -f azure-linux-scale-rocm-bazelremote-svc.yml -n bazelremote-ns 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bazelremote
+  labels:
+    app: bazelremote
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bazelremote
+  template:
+    metadata:
+      labels:
+        app: bazelremote
+    spec:
+      containers:
+      - name: bazel-remote-cache
+        image: buchgr/bazel-remote-cache:latest
+        ports:
+          - containerPort: 9092
+            name: grpc
+            protocol: TCP
+          - containerPort: 8080
+            name: http-default
+            protocol: TCP
+        livenessProbe:
+            grpc:
+              service: /grpc.health.v1.Health/Check
+              port: 9092
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+        readinessProbe:
+            grpc:
+              service: /grpc.health.v1.Health/Check
+              port: 9092
+            failureThreshold: 3
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 10
+        env:
+        # Set bazel-remote configuration value here...
+        - name: BAZEL_REMOTE_DIR
+          value: /data
+        - name: BAZEL_REMOTE_MAX_SIZE
+          value: "10000"
+        volumeMounts:
+        - name: cache-volume
+          mountPath: /data
+      volumes:
+      - name: cache-volume
+        emptyDir: {} #As a test, using temporary disks
