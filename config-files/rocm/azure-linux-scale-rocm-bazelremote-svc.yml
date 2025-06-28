@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
     name: bazelremote-svc
-    namespace: bazelremote-ns # Ensure this matches the namespace name
+    namespace: bazelremote-ns
 spec:
     selector:
-      app.kubernetes.io/name: bazelremote # This matches the labels in your bazelremote Deployment
+      app: bazelremote
     ports:
     - protocol: TCP
       port: 9092
