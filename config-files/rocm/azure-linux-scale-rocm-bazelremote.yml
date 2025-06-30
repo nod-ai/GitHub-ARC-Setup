@@ -53,6 +53,8 @@ spec:
           value: /data
         - name: BAZEL_REMOTE_MAX_SIZE
           value: "10000"
+        - name: BAZEL_REMOTE_DISABLE_HTTP_AC_VALIDATION
+          value: true
         volumeMounts:
         - name: cache-volume
           mountPath: /data
