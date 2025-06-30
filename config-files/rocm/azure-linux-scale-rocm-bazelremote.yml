@@ -52,7 +52,7 @@ spec:
         - name: BAZEL_REMOTE_DIR
           value: /data
         - name: BAZEL_REMOTE_MAX_SIZE
-          value: "10000"
+          value: "1000" #in GiB, i.e. 1tb
         - name: BAZEL_REMOTE_DISABLE_HTTP_AC_VALIDATION
           value: true
         volumeMounts:
