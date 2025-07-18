@@ -43,6 +43,17 @@ template:
             mountPath: /home/runner/externals
     containers:
       - name: runner
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: aws-creds
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws-creds
+                key: AWS_SECRET_ACCESS_KEY
         image: ghcr.io/saienduri/ghascale:main
         imagePullPolicy: Always
         command:
