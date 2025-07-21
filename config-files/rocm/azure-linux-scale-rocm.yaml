@@ -43,17 +43,6 @@ template:
             mountPath: /home/runner/externals
     containers:
       - name: runner
-        env:
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                name: aws-creds
-                key: AWS_ACCESS_KEY_ID
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                name: aws-creds
-                key: AWS_SECRET_ACCESS_KEY
         image: ghcr.io/saienduri/ghascale:main
         imagePullPolicy: Always
         command:
@@ -76,6 +65,9 @@ template:
             mountPath: /home/runner/_work
           - name: dind-sock
             mountPath: /var/run
+          - name: secret-volume
+            mountPath: /etc/secret-volume
+            readOnly: true
     volumes:
       - name: work
         emptyDir: {}
@@ -83,3 +75,6 @@ template:
         emptyDir: {}
       - name: dind-externals
         emptyDir: {}
+      - name: secret-volume
+        secret:
+          secretName: aws-creds
