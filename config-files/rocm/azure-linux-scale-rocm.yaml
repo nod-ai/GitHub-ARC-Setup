@@ -65,8 +65,8 @@ template:
             mountPath: /home/runner/_work
           - name: dind-sock
             mountPath: /var/run
-          - name: secret-volume
-            mountPath: /etc/secret-volume
+          - name: aws-credentials-volume
+            mountPath: /root/.aws
             readOnly: true
     volumes:
       - name: work
@@ -75,6 +75,9 @@ template:
         emptyDir: {}
       - name: dind-externals
         emptyDir: {}
-      - name: secret-volume
+      - name: aws-credentials-volume
         secret:
-          secretName: aws-creds
+          secretName: aws-credentials
+          items:
+          - key: credentials
+            path: credentials
