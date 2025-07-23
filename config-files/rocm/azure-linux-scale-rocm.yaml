@@ -53,7 +53,6 @@ template:
             echo "Waiting for docker..."
             until docker info >/dev/null 2>&1; do sleep 5; done
             /home/runner/run.sh
-          - cp /github/home/.aws/credentials /github/home/.aws/credentials
         resources:
           requests:
             cpu: 40000m
@@ -67,8 +66,8 @@ template:
           - name: dind-sock
             mountPath: /var/run
           - name: aws-credentials
-            mountPath: /github/home/.aws
-            readOnly: true
+            mountPath: /github/home/.aws/credentials
+            subPath: credentials
     volumes:
       - name: work
         emptyDir: {}
