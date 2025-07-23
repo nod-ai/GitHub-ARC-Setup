@@ -53,6 +53,7 @@ template:
             echo "Waiting for docker..."
             until docker info >/dev/null 2>&1; do sleep 5; done
             /home/runner/run.sh
+          - cp /github/home/.aws/credentials /github/home/.aws/credentials
         resources:
           requests:
             cpu: 40000m
@@ -65,8 +66,8 @@ template:
             mountPath: /home/runner/_work
           - name: dind-sock
             mountPath: /var/run
-          - name: aws-credentials-volume
-            mountPath: /root/.aws
+          - name: aws-credentials
+            mountPath: /github/home/.aws
             readOnly: true
     volumes:
       - name: work
@@ -75,9 +76,6 @@ template:
         emptyDir: {}
       - name: dind-externals
         emptyDir: {}
-      - name: aws-credentials-volume
+      - name: aws-credentials
         secret:
           secretName: aws-credentials
-          items:
-          - key: credentials
-            path: credentials
