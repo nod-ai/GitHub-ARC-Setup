@@ -66,8 +66,9 @@ template:
           - name: dind-sock
             mountPath: /var/run
           - name: aws-credentials
-            mountPath: /github/home/.aws/credentials
+            mountPath: /runner/shared-data/credentials
             subPath: credentials
+            readOnly: true
     volumes:
       - name: work
         emptyDir: {}
@@ -78,3 +79,6 @@ template:
       - name: aws-credentials
         secret:
           secretName: aws-credentials
+          items:
+            - key: credentials
+              path: credentials
