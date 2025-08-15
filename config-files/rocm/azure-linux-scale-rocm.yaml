@@ -63,9 +63,6 @@ template:
         env:
           - name: DOCKER_HOST
             value: unix:///var/run/docker.sock
-        securityContext:
-          runAsUser: 1001
-          runAsGroup: 1001
         volumeMounts:
           - name: work
             mountPath: /home/runner/_work
