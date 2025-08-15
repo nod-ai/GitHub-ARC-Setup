@@ -41,6 +41,9 @@ template:
             mountPath: /var/run
           - name: dind-externals
             mountPath: /home/runner/externals
+          - name: aws-credential-config
+            mountPath: /runner/config/credentials.ini
+            subPath: credentials.ini
     containers:
       - name: runner
         image: ghcr.io/saienduri/ghascale:main
@@ -60,15 +63,14 @@ template:
         env:
           - name: DOCKER_HOST
             value: unix:///var/run/docker.sock
+        securityContext:
+          runAsUser: 1001
+          runAsGroup: 1001
         volumeMounts:
           - name: work
             mountPath: /home/runner/_work
           - name: dind-sock
             mountPath: /var/run
-          - name: aws-credentials
-            mountPath: /runner/shared-data/credentials
-            subPath: credentials
-            readOnly: true
     volumes:
       - name: work
         emptyDir: {}
@@ -76,9 +78,7 @@ template:
         emptyDir: {}
       - name: dind-externals
         emptyDir: {}
-      - name: aws-credentials
-        secret:
-          secretName: aws-credentials
-          items:
-            - key: credentials
-              path: credentials
+      - name: aws-credential-config
+        configMap:
+          name: aws-cred-config
+  
