@@ -69,3 +69,9 @@ If running step 5 gives an error about namespaces, do step 6, then step 5, then 
 ```
 helm upgrade --install "arc-runner-set" -f windows-config-files/values.yaml --namespace "arc-runners" --create-namespace oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
 ```
+
+## Changing the AWS credentials for `azure-windows-scale-rocm` runners
+
+To change the AWS credentials, run `kubectl edit secrets aws-creds`.
+
+This will open a default text editor. Please update the secret with the new secret with base64 encoding. After editing the yaml file, simply save it and the credentials will be updated. Please allow up to 2 minutes for changes to propogate.

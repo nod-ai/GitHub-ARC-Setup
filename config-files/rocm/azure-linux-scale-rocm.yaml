@@ -41,6 +41,9 @@ template:
             mountPath: /var/run
           - name: dind-externals
             mountPath: /home/runner/externals
+          - name: aws-credential-config
+            mountPath: /runner/config/credentials.ini
+            subPath: credentials.ini
     containers:
       - name: runner
         image: ghcr.io/saienduri/ghascale:main
@@ -72,3 +75,7 @@ template:
         emptyDir: {}
       - name: dind-externals
         emptyDir: {}
+      - name: aws-credential-config
+        configMap:
+          name: aws-cred-config
+  
