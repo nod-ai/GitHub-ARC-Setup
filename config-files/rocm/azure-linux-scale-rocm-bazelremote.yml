@@ -20,6 +20,13 @@ spec:
       labels:
         app: bazelremote
     spec:
+      nodeSelector:
+        app: bazelremotelabel
+      tolerations:
+      - key: "app"
+        operator: "Equal"
+        value: "bazelremotetaint"
+        effect: "NoSchedule"
       containers:
       - name: bazel-remote-cache
         image: buchgr/bazel-remote-cache:latest
