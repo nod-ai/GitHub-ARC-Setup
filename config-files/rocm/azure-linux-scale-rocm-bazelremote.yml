@@ -62,6 +62,8 @@ spec:
           value: "1000" #in GiB, i.e. 1tb
         - name: BAZEL_REMOTE_DISABLE_HTTP_AC_VALIDATION
           value: "true"
+        - name: BAZEL_REMOTE_ENABLE_ENDPOINT_METRICS
+          value: "true"
         volumeMounts:
         - name: cache-volume
           mountPath: /data
