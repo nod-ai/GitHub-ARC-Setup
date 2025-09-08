@@ -22,7 +22,7 @@ RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/
     Remove-Item -Force actions-runner.zip
 
 ################################################################################
-# Install Chocolatey + tools (Git, Python, CMake, etc.)
+# Install Chocolatey + tools (Git, Python, CMake, Docker CLI, etc.)
 ################################################################################
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072; `
@@ -30,8 +30,8 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
     choco feature enable -n allowGlobalConfirmation; `
     choco install -y git.install gh powershell-core azure-cli docker-cli docker-compose cmake python --installargs '"ADD_CMAKE_TO_PATH=System"'
 
-# Add Git & Python to PATH (paths with spaces are quoted)
-RUN setx /M PATH "$Env:PATH;\"C:\Program Files\Git\bin\";C:\Python313"
+# Correctly append Git & Python to PATH (handles spaces)
+RUN setx /M PATH ('{0};{1};{2}' -f $Env:PATH, 'C:\Program Files\Git\bin', 'C:\Python313')
 
 # Enable long paths in Windows
 RUN New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
@@ -44,7 +44,7 @@ SHELL ["cmd", "/S", "/C"]
 # Download VS Build Tools installer
 ADD https://aka.ms/vs/17/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 
-# Install VS Build Tools inside a single RUN instruction (no invalid Docker instructions)
+# Install VS Build Tools (all workloads needed)
 RUN (start /w C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --add Microsoft.VisualStudio.Workload.AzureBuildTools `
     --add Microsoft.VisualStudio.Workload.VCTools `
@@ -55,7 +55,7 @@ RUN (start /w C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     || IF "%ERRORLEVEL%"=="3010" EXIT 0) `
     && del /q C:\TEMP\vs_buildtools.exe
 
-# Add VS Build Tools paths
+# Add VS Build Tools to PATH
 RUN setx /M PATH "%PATH%;%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\Common7\Tools;%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
 
 ################################################################################
