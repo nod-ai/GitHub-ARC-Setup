@@ -21,16 +21,15 @@ RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/
     [System.IO.Compression.ZipFile]::ExtractToDirectory('actions-runner.zip', $PWD); `
     Remove-Item -Force actions-runner.zip
 
-################################################################################
-# Install Chocolatey + common tools
-################################################################################
+# Install Chocolatey and tools (without refreshenv)
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072; `
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')); `
     choco feature enable -n allowGlobalConfirmation; `
-    choco install -y git.install gh powershell-core azure-cli docker-cli docker-compose cmake python --installargs '"ADD_CMAKE_TO_PATH=System"'; `
-    refreshenv
+    choco install -y git.install gh powershell-core azure-cli docker-cli docker-compose cmake python --installargs '"ADD_CMAKE_TO_PATH=System"'
 
+# Manually append Git and Python to PATH if needed
+RUN setx /M PATH "$($Env:PATH);C:\Program Files\Git\bin;C:\Python313"
 # Add Git Bash to PATH
 RUN setx /M PATH "$($Env:PATH);C:\Program Files\Git\bin"
 
