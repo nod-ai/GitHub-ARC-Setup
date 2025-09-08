@@ -1,5 +1,6 @@
 # escape=`
 FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
 ARG RUNNER_OS=win
 ARG RUNNER_ARCH=x64
 ARG RUNNER_VERSION
@@ -7,8 +8,10 @@ ARG RUNNER_CONTAINER_HOOKS_VERSION=0.6.1
 
 WORKDIR C:/home/runner
 
-# PowerShell as default shell
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';$ProgressPreference='SilentlyContinue';"]
+################################################################################
+# Use PowerShell for most installations
+################################################################################
+SHELL ["powershell", "-Command", "$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';"]
 
 ################################################################################
 # Install GitHub Actions Runner
@@ -39,50 +42,43 @@ RUN New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSyste
 ################################################################################
 SHELL ["cmd", "/S", "/C"]
 
-# Download VS Build Tools
-ADD https://aka.ms/vs/17/release/vs_buildtools.exe C:\\TEMP\\vs_buildtools.exe
+# Download VS Build Tools installer
+ADD https://aka.ms/vs/17/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 
-# Install VS Build Tools with workloads (NativeDesktop, VCTools, ManagedDesktop, ATL, CoreEditor)
-RUN C:\\TEMP\\vs_buildtools.exe --quiet --wait --norestart --nocache ^
-    --installPath "C:\\BuildTools" ^
-    --add Microsoft.VisualStudio.Workload.AzureBuildTools ^
-    --add Microsoft.VisualStudio.Workload.VCTools ^
-    --add Microsoft.VisualStudio.Workload.ManagedDesktop ^
-    --add Microsoft.VisualStudio.Workload.DesktopDevelopmentWithC++ ^
-    --add Microsoft.VisualStudio.Workload.CoreEditor ^
-    --add Microsoft.VisualStudio.Component.ATL ^
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 ^
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 ^
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 ^
-    --remove Microsoft.VisualStudio.Component.Windows81SDK ^
- || IF "%ERRORLEVEL%"=="3010" EXIT 0
+# Install VS Build Tools inside a single RUN
+RUN (start /w C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
+    --add Microsoft.VisualStudio.Workload.AzureBuildTools `
+    --add Microsoft.VisualStudio.Workload.VCTools `
+    --add Microsoft.VisualStudio.Workload.ManagedDesktop `
+    --add Microsoft.VisualStudio.Workload.DesktopDevelopmentWithC++ `
+    --add Microsoft.VisualStudio.Workload.CoreEditor `
+    --add Microsoft.VisualStudio.Component.ATL `
+    || IF "%ERRORLEVEL%"=="3010" EXIT 0) `
+    && del /q C:\TEMP\vs_buildtools.exe
 
-# Clean up installer
-RUN del C:\\TEMP\\vs_buildtools.exe
-
-# Add Build Tools to PATH
-RUN setx /M PATH "%PATH%;C:\\BuildTools\\Common7\\Tools;C:\\BuildTools\\MSBuild\\Current\\Bin"
+# Add VS Build Tools to PATH
+RUN setx /M PATH "%PATH%;%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\Common7\Tools;%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
 
 ################################################################################
-# Back to PowerShell for Python, certs, vcpkg
+# Switch back to PowerShell for Python, certs, vcpkg
 ################################################################################
 SHELL ["powershell", "-Command"]
 
 # Upgrade Python packages & configure certs
 RUN python -m pip install --upgrade certifi setuptools; `
-    setx SSL_CERT_FILE "C:\\Users\\ContainerAdministrator\\AppData\\Local\\Programs\\Python\\Python310\\Lib\\site-packages\\certifi\\cacert.pem"; `
+    setx SSL_CERT_FILE "C:\Users\ContainerAdministrator\AppData\Local\Programs\Python\Python310\Lib\site-packages\certifi\cacert.pem"; `
     certutil -generateSSTFromWU certs.sst; `
     certutil -addstore -f ROOT certs.sst; `
     del certs.sst
 
 # Install vcpkg
-RUN git clone https://github.com/microsoft/vcpkg.git C:\\vcpkg; `
-    C:\\vcpkg\\bootstrap-vcpkg.bat; `
-    setx /M PATH "$($Env:PATH);C:\\vcpkg"; `
-    C:\\vcpkg\\vcpkg.exe install zlib:x64-windows --clean-after-build; `
-    C:\\vcpkg\\vcpkg.exe remove zlib:x64-windows
+RUN git clone https://github.com/microsoft/vcpkg.git C:\vcpkg; `
+    C:\vcpkg\bootstrap-vcpkg.bat; `
+    setx /M PATH "$($Env:PATH);C:\vcpkg"; `
+    C:\vcpkg\vcpkg.exe install zlib:x64-windows --clean-after-build; `
+    C:\vcpkg\vcpkg.exe remove zlib:x64-windows
 
 ################################################################################
 # Entrypoint: VS Dev prompt + PowerShell
 ################################################################################
-ENTRYPOINT ["cmd.exe", "/S", "/C", "C:\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat && powershell.exe -NoLogo -ExecutionPolicy Bypass"]
+ENTRYPOINT ["cmd.exe", "/S", "/C", "%ProgramFiles(x86)%\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat && powershell.exe -NoLogo -ExecutionPolicy Bypass"]
