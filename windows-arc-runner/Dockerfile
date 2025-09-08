@@ -1,6 +1,6 @@
 # escape=`
 
-FROM mcr.microsoft.com/vs2022/buildtools:latest
+FROM mcr.microsoft.com/vs2022/buildtools:17.13.1-windowsservercore-ltsc2022
 
 ARG RUNNER_OS=win
 ARG RUNNER_ARCH=x64
