@@ -9,7 +9,7 @@ ARG RUNNER_CONTAINER_HOOKS_VERSION=0.6.1
 WORKDIR C:/home/runner
 
 ################################################################################
-# Use PowerShell for most installations
+# Use PowerShell for initial installs
 ################################################################################
 SHELL ["powershell", "-Command", "$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';"]
 
@@ -21,30 +21,30 @@ RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/
     [System.IO.Compression.ZipFile]::ExtractToDirectory('actions-runner.zip', $PWD); `
     Remove-Item -Force actions-runner.zip
 
-# Install Chocolatey and tools (without refreshenv)
+################################################################################
+# Install Chocolatey + tools (Git, Python, CMake, etc.)
+################################################################################
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072; `
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')); `
     choco feature enable -n allowGlobalConfirmation; `
     choco install -y git.install gh powershell-core azure-cli docker-cli docker-compose cmake python --installargs '"ADD_CMAKE_TO_PATH=System"'
 
-# Manually append Git and Python to PATH if needed
-RUN setx /M PATH "$($Env:PATH);C:\Program Files\Git\bin;C:\Python313"
-# Add Git Bash to PATH
-RUN setx /M PATH "$($Env:PATH);C:\Program Files\Git\bin"
+# Add Git & Python to PATH (paths with spaces are quoted)
+RUN setx /M PATH "$Env:PATH;\"C:\Program Files\Git\bin\";C:\Python313"
 
-# Enable long paths
+# Enable long paths in Windows
 RUN New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 
 ################################################################################
-# Switch to cmd for VS installer
+# Switch to CMD for VS Build Tools
 ################################################################################
 SHELL ["cmd", "/S", "/C"]
 
 # Download VS Build Tools installer
 ADD https://aka.ms/vs/17/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 
-# Install VS Build Tools inside a single RUN
+# Install VS Build Tools inside a single RUN instruction (no invalid Docker instructions)
 RUN (start /w C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --add Microsoft.VisualStudio.Workload.AzureBuildTools `
     --add Microsoft.VisualStudio.Workload.VCTools `
@@ -55,15 +55,15 @@ RUN (start /w C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     || IF "%ERRORLEVEL%"=="3010" EXIT 0) `
     && del /q C:\TEMP\vs_buildtools.exe
 
-# Add VS Build Tools to PATH
+# Add VS Build Tools paths
 RUN setx /M PATH "%PATH%;%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\Common7\Tools;%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
 
 ################################################################################
-# Switch back to PowerShell for Python, certs, vcpkg
+# Switch back to PowerShell for Python certs and vcpkg
 ################################################################################
 SHELL ["powershell", "-Command"]
 
-# Upgrade Python packages & configure certs
+# Configure Python certificates
 RUN python -m pip install --upgrade certifi setuptools; `
     setx SSL_CERT_FILE "C:\Users\ContainerAdministrator\AppData\Local\Programs\Python\Python310\Lib\site-packages\certifi\cacert.pem"; `
     certutil -generateSSTFromWU certs.sst; `
@@ -73,7 +73,7 @@ RUN python -m pip install --upgrade certifi setuptools; `
 # Install vcpkg
 RUN git clone https://github.com/microsoft/vcpkg.git C:\vcpkg; `
     C:\vcpkg\bootstrap-vcpkg.bat; `
-    setx /M PATH "$($Env:PATH);C:\vcpkg"; `
+    setx /M PATH "$Env:PATH;C:\vcpkg"; `
     C:\vcpkg\vcpkg.exe install zlib:x64-windows --clean-after-build; `
     C:\vcpkg\vcpkg.exe remove zlib:x64-windows
 
