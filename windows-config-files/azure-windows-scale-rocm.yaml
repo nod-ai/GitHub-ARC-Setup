@@ -19,33 +19,30 @@ template:
       - cmd.exe
       - /c
       - \home\runner\run.cmd
+      env:
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            key: AWS_ACCESS_KEY_ID
+            name: aws-creds
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            key: AWS_SECRET_ACCESS_KEY
+            name: aws-creds
       image: ghcr.io/eliasj42/arc-windows-runner:latest
       name: runner
-      env:
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: aws-creds
-              key: AWS_ACCESS_KEY_ID
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: aws-creds
-              key: AWS_SECRET_ACCESS_KEY
       resources:
-        limits:
-          ephemeral-storage: 400Gi
-          memory: 300Gi
         requests:
-          ephemeral-storage: 10Gi
-          memory: 300Gi
+          cpu: 40000m
+          memory: 50000Mi
       volumeMounts:
-      - name: tmpbuild-dir
-        mountPath: "b:"
-      - name: src-ccache-dir
-        mountPath: "s:"
-      - name: src-ccache-dir
-        mountPath: /home/runner/_work
+      - mountPath: 'b:'
+        name: tmpbuild-dir
+      - mountPath: 's:'
+        name: src-ccache-dir
+      - mountPath: /home/runner/_work
+        name: src-ccache-dir
     tolerations:
     - effect: NoSchedule
       key: kubernetes.io/os
@@ -56,7 +53,7 @@ template:
       operator: Equal
       value: spot
     volumes:
-    - name: tmpbuild-dir
-      emptyDir: {}
-    - name: src-ccache-dir
-      emptyDir: {}
+    - emptyDir: {}
+      name: tmpbuild-dir
+    - emptyDir: {}
+      name: src-ccache-dir
