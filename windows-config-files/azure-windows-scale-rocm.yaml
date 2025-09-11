@@ -33,12 +33,9 @@ template:
               name: aws-creds
               key: AWS_SECRET_ACCESS_KEY
       resources:
-        limits:
-          ephemeral-storage: 400Gi
-          memory: 300Gi
         requests:
-          ephemeral-storage: 10Gi
-          memory: 300Gi
+          cpu: 40000m
+          memory: 50000Mi
       volumeMounts:
       - name: tmpbuild-dir
         mountPath: "b:"
