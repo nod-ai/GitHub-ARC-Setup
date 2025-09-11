@@ -83,10 +83,9 @@ RUN $env:PATH += ';C:\vcpkg'; setx /M PATH $env:PATH
 
 # Initialize VS Build Tools environment and install packages
 RUN powershell -NoProfile -Command `
-    "$ErrorActionPreference = 'Stop'; `
-    $ProgressPreference = 'SilentlyContinue'; `
-    cmd.exe /c '\"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat\" && vcpkg install zlib:x64-windows --clean-after-build'"
-
+  $ErrorActionPreference = 'Stop'; `
+  $ProgressPreference = 'SilentlyContinue'; `
+  cmd.exe /c "\"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat\" && C:\vcpkg\vcpkg.exe install zlib:x64-windows --clean-after-build"
 
 ################################################################################
 # Entrypoint: VS Dev prompt + PowerShell
