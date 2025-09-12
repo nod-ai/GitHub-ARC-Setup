@@ -94,7 +94,7 @@ RUN `
 # Define the entry point for the docker container.
 # This entry point starts the developer command prompt and launches the PowerShell shell.
 RUN choco install cmake --version=3.31.0 -y --no-progress --installargs '"ADD_CMAKE_TO_PATH=System"'
-RUN choco install python -y --no-progress
+RUN choco install python --version=3.13.7 -y --no-progress
 RUN python -m pip install --upgrade certifi
 RUN setx SSL_CERT_FILE "C:\Users\ContainerAdministrator\AppData\Local\Programs\Python\Python310\Lib\site-packages\certifi\cacert.pem"
 RUN certutil -generateSSTFromWU certs.sst
