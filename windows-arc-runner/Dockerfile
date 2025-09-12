@@ -70,22 +70,13 @@ RUN python -m pip install --upgrade certifi setuptools; `
     certutil -addstore -f ROOT certs.sst; `
     del certs.sst
 
-# --- vcpkg installation ---
-# Clone vcpkg
-RUN git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-
-# Bootstrap vcpkg (disable telemetry)
-RUN C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-
-# Add vcpkg to PATH
-SHELL ["powershell", "-Command", "$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';"]
-RUN $env:PATH += ';C:\vcpkg'; setx /M PATH $env:PATH
-
-# Initialize VS Build Tools environment and install packages
-RUN powershell -NoProfile -Command `
-  "& 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat'; `
-   & 'C:\vcpkg\vcpkg.exe' install zlib:x64-windows --clean-after-build"
-
+RUN git clone https://github.com/microsoft/vcpkg.git C:\vcpkg `
+    && cd C:\vcpkg `
+    && bootstrap-vcpkg.bat `
+    && SETX /M PATH "C:\vcpkg;%PATH%" `
+    && vcpkg install zlib:x64-windows --clean-after-build `
+    && vcpkg remove zlib:x64-windows
+    
 ################################################################################
 # Entrypoint: VS Dev prompt + PowerShell
 ################################################################################
