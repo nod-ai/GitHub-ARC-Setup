@@ -1,3 +1,7 @@
+# Copyright (c) 2023 Ken Muse
+# Copyright (c) Advanced Micro Devices, Inc. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 $securityProtocolSettingsOriginal = [System.Net.ServicePointManager]::SecurityProtocol
 try {
     # Set TLS 1.2 (3072), then TLS 1.1 (768), then TLS 1.0 (192), finally SSL 3.0 (48)

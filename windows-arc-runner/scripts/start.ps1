@@ -1,3 +1,7 @@
+# Copyright (c) 2023 Ken Muse
+# Copyright (c) Advanced Micro Devices, Inc. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 #This script invokes GitHub-CLI (Already installed on container image)
 #To use this entrypoint script run: Docker run -e GH_TOKEN='myPatToken' -e GH_OWNER='orgName' -e GH_REPOSITORY='repoName' -d imageName 
 Param (

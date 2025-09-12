@@ -1,3 +1,7 @@
+# Copyright (c) 2023 Ken Muse
+# Copyright (c) Advanced Micro Devices, Inc. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 #This script invokes GitHub-CLI (Pre-installed on container image)
 Param (
     [Parameter(Mandatory = $false)]
