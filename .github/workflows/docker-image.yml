@@ -1,0 +1,93 @@
+# Copyright (c) 2023 Ken Muse
+# Copyright (c) Advanced Micro Devices, Inc. All rights reserved.
+# SPDX-License-Identifier: MIT
+
+name: Docker Image Build
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: nod-ai/arc-windows-runner
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0  
+
+    - name: Log into registry ${{ env.REGISTRY }}
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+   
+      # BuildX is not supported and should not be installed or configured
+      # Features such as multistage builds and cache support are not available
+    - name: Get Versions
+      id: versions
+      env:
+        AUTH: Bearer ${{ github.token }}
+        REPO_OWNER: ${{ github.event.repository.owner.login }}
+        REPO_NAME: ${{ github.event.repository.name }}
+        REPO_ORG: ${{ github.event.organization.login }}
+      run: |
+          $repoOwner = $env:REPO_OWNER 
+          $repoName = $env:REPO_NAME
+          $orgName = $env:REPO_ORG
+
+          # The URL is different for personal or organization endpoints, so resolve the correct one
+          # The org variable should be non-empty and match the owner name if this is an organization.
+          $packageUrl = ($repoOwner -eq $orgName) ? "https://api.github.com/orgs/$repoOwner/packages/container/$repoName/versions" : "https://api.github.com/users/$repoOwner/packages/container/$repoName/versions"
+
+          # PowerShell 7 syntax to avoid raising an exception.
+          $apiResults = Invoke-WebRequest -Headers @{ "Authorization"=$env:AUTH } -Uri $packageUrl -SkipHttpErrorCheck
+          if ($apiResults.StatusCode -eq 200) {
+            $content = $apiResults.Content | ConvertFrom-Json
+          }
+          elseif ($apiResults.StatusCode -eq 404) {
+            $content = @()
+          }
+          else {
+            Write-Host "Status Code: ${apiResults.StatusCode}"
+            Write-Host "Error: ${apiResults.Content}"
+            exit $apiResults.StatusCode
+          }
+          
+          $publishedImageVersions = $($apiResults.Content | ConvertFrom-Json) | %{ [PSCustomObject]@{ Id=$_.id; Url=$_.url;Tags=$_.metadata.container.tags } } | %{ $_.tags } 
+          $currentRunnerVersion = ((Invoke-WebRequest -Uri https://api.github.com/repos/actions/runner/releases/latest).Content | ConvertFrom-Json).tag_name -replace 'v',''
+          $currentHooksVersion = ((Invoke-WebRequest -Uri https://api.github.com/repos/actions/runner-container-hooks/releases/latest).Content | ConvertFrom-Json).tag_name -replace 'v',''
+
+          # Convert the values to step outputs
+          echo "PUBLISHED=$($publishedImageVersions -Contains "v${currentRunnerVersion}")" >> ${env:GITHUB_OUTPUT}
+          echo "RUNNER_VERSION=${currentRunnerVersion}"  >> ${env:GITHUB_OUTPUT}
+          echo "RUNNER_HOOKS_VERSION=${currentHooksVersion}" >> ${env:GITHUB_OUTPUT}
+
+          # Output details to the step summary
+          echo "**Current Runner version :** v${currentRunnerVersion}" >> ${env:GITHUB_STEP_SUMMARY}
+          echo "**Current Runner hooks version:** v${currentHooksVersion}" >> ${env:GITHUB_STEP_SUMMARY}
+          echo "**Published New Image:** $($publishedImageVersions -Contains "v${currentRunnerVersion}")" >> ${env:GITHUB_STEP_SUMMARY}
+    - name: Docker Build
+      if: ${{ steps.versions.outputs.PUBLISHED != 'True' }}
+      env:
+        RUNNER_VERSION: ${{ steps.versions.outputs.RUNNER_VERSION }}
+        RUNNER_HOOKS_VERSION: ${{ steps.versions.outputs.RUNNER_HOOKS_VERSION }}
+      run: |
+          $currentRunnerVersion = $env:RUNNER_VERSION
+          $currentHooksVersion = $env:RUNNER_HOOKS_VERSION
+          docker build --build-arg RUNNER_CONTAINER_HOOKS_VERSION=$currentHooksVersion --build-arg RUNNER_VERSION=$currentRunnerVersion -f windows-arc-runner/Dockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:"v${currentRunnerVersion}" .
+    - name: Docker Push
+      if: ${{ github.event_name != 'pull_request' && steps.versions.outputs.PUBLISHED != 'True' }}
+      run: |
+          docker push -a ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+
