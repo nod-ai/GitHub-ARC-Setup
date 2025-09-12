@@ -1,8 +1,8 @@
+# escape=`
+
 # Copyright (c) 2023 Ken Muse
 # Copyright (c) Advanced Micro Devices, Inc. All rights reserved.
 # SPDX-License-Identifier: MIT
-
-# escape=`
 
 FROM mcr.microsoft.com/windows/servercore:ltsc2022
 ARG RUNNER_OS=win
