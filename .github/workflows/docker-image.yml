@@ -3,11 +3,6 @@ name: Docker Image Build
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: "0 1 * * *"
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -78,7 +73,7 @@ jobs:
           echo "**Current Runner hooks version:** v${currentHooksVersion}" >> ${env:GITHUB_STEP_SUMMARY}
           echo "**Published New Image:** $($publishedImageVersions -Contains "v${currentRunnerVersion}")" >> ${env:GITHUB_STEP_SUMMARY}
     - name: Docker Build
-      #if: ${{ steps.versions.outputs.PUBLISHED != 'True' }}
+      if: ${{ steps.versions.outputs.PUBLISHED != 'True' }}
       env:
         RUNNER_VERSION: ${{ steps.versions.outputs.RUNNER_VERSION }}
         RUNNER_HOOKS_VERSION: ${{ steps.versions.outputs.RUNNER_HOOKS_VERSION }}
