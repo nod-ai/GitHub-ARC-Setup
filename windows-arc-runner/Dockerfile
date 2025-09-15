@@ -75,6 +75,12 @@ RUN .\vswhere.exe
 RUN vswhere
 # Set the entrypoint to cmd.exe so you can run vswhere
 
+# Install dvc through release installer
+RUN Invoke-WebRequest -Uri https://dvc.org/download/win/dvc-3.62.0 -OutFile dvc.exe; `
+    Start-Process -FilePath .\dvc.exe -ArgumentList '/SP- /NORESTART /SUPPRESSMSGBOXES /VERYSILENT' -NoNewWindow -Wait; `
+    Remove-Item dvc.exe
+RUN setx /M PATH $($Env:PATH + ';C:\Program Files (x86)\DVC (Data Version Control)')
+
 # Restore the default Windows shell for correct batch processing.
 SHELL ["cmd", "/S", "/C"]
 
