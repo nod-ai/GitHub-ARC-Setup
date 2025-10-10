@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus
+  namespace: nexus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexus
+  template:
+    metadata:
+      labels:
+        app: nexus
+    spec:
+      initContainers:
+      - name: volume-mount-hack
+        image: busybox
+        command: ["sh", "-c", "chown -R 200:200 /nexus-data /opt/sonatype/sonatype-work"]
+        volumeMounts:
+          - name: nexus-data
+            mountPath: /nexus-data
+            subPath: nexus-data
+          - name: nexus-data
+            mountPath: /opt/sonatype/sonatype-work
+            subPath: sonatype-work
+      containers:
+        - name: nexus
+          image: sonatype/nexus3:latest
+          ports:
+            - containerPort: 8081
+          volumeMounts:
+            - name: nexus-data
+              mountPath: /nexus-data
+              subPath: nexus-data
+            - name: nexus-data
+              mountPath: /opt/sonatype/sonatype-work
+              subPath: sonatype-work
+      volumes:
+        - name: nexus-data
+          persistentVolumeClaim:
+            claimName: nexus-pvc
