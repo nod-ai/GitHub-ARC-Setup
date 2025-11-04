@@ -24,13 +24,24 @@ spec:
       containers:
         - name: powershell
           image: mcr.microsoft.com/windows/nanoserver:ltsc2022
-          command:
-            - powershell.exe
-            - -Command
-            - "mkdir c:\\hostlogs\\; Start-Sleep -Seconds 864000"
-            #- "rm c:\\hostlogs\\time.log;Start-Sleep -Seconds 3600"
-            #- "rm c:\\hostlogs\\time.log"
-            #- "mkdir c:\\hostlogs\\; while($true) { \"Current Host Time: $(Get-Date) $(w32tm /query /status) \" >> C:\\hostlogs\\time.log; Start-Sleep -Seconds 60 }"
+          command: ["powershell.exe"]
+          args:
+            - -c
+            - mkdir c:\hostlogs\;
+            - function queryTime() { 
+            -   echo "[$(Get-Date)]";
+            -   w32tm /query /status;
+            -   w32tm /stripchart /computer:time.aws.com /dataonly /samples:3;
+            - "}"
+            - if (!(Test-Path "c:\hostlogs\start.log")) { 
+            -   queryTime | Out-File -Encoding ascii c:\hostlogs\start.log; 
+            -  "}"
+            - while($true) {
+            -   queryTime | Out-File -Encoding ascii -Append c:\hostlogs\time.log; 
+            -   Start-Sleep -Seconds 57;
+            - "}"
+            - Start-Sleep -Seconds 864000
+
       terminationGracePeriodSeconds: 0
       tolerations:
       - effect: NoSchedule
