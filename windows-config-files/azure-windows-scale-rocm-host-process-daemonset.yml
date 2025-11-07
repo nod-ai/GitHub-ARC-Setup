@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: privileged-daemonset
+  namespace: kube-system
+  labels:
+    app: privileged-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: privileged-daemonset
+  template:
+    metadata:
+      labels:
+        app: privileged-daemonset
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+      securityContext:
+        windowsOptions:
+          hostProcess: true
+          runAsUserName: "NT AUTHORITY\\SYSTEM"
+      hostNetwork: true
+      containers:
+        - name: powershell
+          image: mcr.microsoft.com/windows/nanoserver:ltsc2022
+          command: ["powershell.exe"]
+          args:
+            - -c
+            - mkdir c:\hostlogs\;
+            - function queryTime() { 
+            -   echo "[$(Get-Date)]";
+            -   w32tm /query /status;
+            -   w32tm /stripchart /computer:time.aws.com /dataonly /samples:3;
+            - "}"
+            - if (!(Test-Path "c:\hostlogs\start.log")) { 
+            -   queryTime | Out-File -Encoding ascii c:\hostlogs\start.log; 
+            -  "}"
+            - while($true) {
+            -   queryTime | Out-File -Encoding ascii -Append c:\hostlogs\time.log; 
+            -   Start-Sleep -Seconds 57;
+            - "}"
+            - Start-Sleep -Seconds 864000
+
+      terminationGracePeriodSeconds: 0
+      tolerations:
+      - effect: NoSchedule
+        key: kubernetes.io/os
+        operator: Equal
+        value: windows
+      - effect: NoSchedule
+        key: kubernetes.azure.com/scalesetpriority
+        operator: Equal
+        value: spot
+      volumes:
+        - name: host-logs
+          hostPath:
+            path: "C:\\hostlogs\\" # directory location on host
+            type: DirectoryOrCreate        # this field is optional
