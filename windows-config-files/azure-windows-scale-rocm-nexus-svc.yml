@@ -4,6 +4,7 @@ metadata:
   name: nexus-service
   namespace: nexus
 spec:
+  clusterIP: 10.0.167.96
   selector:
     app: nexus
   ports:
