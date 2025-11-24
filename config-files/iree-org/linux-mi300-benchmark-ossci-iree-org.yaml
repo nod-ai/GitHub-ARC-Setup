@@ -10,7 +10,7 @@ controllerServiceAccount:
 template:
   spec:
     tolerations:
-      - key: "shark-ci"
+      - key: "amd-shark-ci"
         operator: "Equal"
         value: "reserved"
         effect: "NoSchedule"
@@ -53,10 +53,10 @@ template:
           - name: podinfo
             mountPath: /etc/podinfo
           - name: k8s-mount
-            mountPath: /shark-dev
+            mountPath: /amdshark-dev
             readOnly: True
           - name: k8s-cache
-            mountPath: /shark-cache
+            mountPath: /amdshark-cache
             readOnly: False
     containers:
       - name: runner
@@ -97,10 +97,10 @@ template:
           - name: podinfo
             mountPath: /etc/podinfo
           - name: k8s-mount
-            mountPath: /shark-dev
+            mountPath: /amdshark-dev
             readOnly: true
           - name: k8s-cache
-            mountPath: /shark-cache
+            mountPath: /amdshark-cache
             readOnly: False
 
     volumes:
