@@ -10,7 +10,7 @@ controllerServiceAccount:
 template:
   spec:
     tolerations:
-      - key: "shark-ci"
+      - key: "amd-shark-ci"
         operator: "Equal"
         value: "reserved"
         effect: "NoSchedule"
@@ -38,7 +38,7 @@ template:
           - name: DOCKER_GROUP_GID
             value: "123"
           - name: IREE_TEST_FILES
-            value: /shark-cache/data/iree-regression-cache
+            value: /amdshark-cache/data/iree-regression-cache
         securityContext:
           privileged: true
           fsGroup: 1001  # Ensure the correct group is set
@@ -52,10 +52,10 @@ template:
           - name: podinfo
             mountPath: /etc/podinfo
           - name: k8s-mount
-            mountPath: /shark-dev
+            mountPath: /amdshark-dev
             readOnly: True
           - name: k8s-cache
-            mountPath: /shark-cache
+            mountPath: /amdshark-cache
             readOnly: False
     containers:
       - name: runner
@@ -87,7 +87,7 @@ template:
           - name: DOCKER_HOST
             value: unix:///var/run/docker.sock
           - name: IREE_TEST_FILES
-            value: /shark-cache/data/iree-regression-cache
+            value: /amdshark-cache/data/iree-regression-cache
         volumeMounts:
           - name: work
             mountPath: /home/runner/_work
@@ -98,10 +98,10 @@ template:
           - name: podinfo
             mountPath: /etc/podinfo
           - name: k8s-mount
-            mountPath: /shark-dev
+            mountPath: /amdshark-dev
             readOnly: True
           - name: k8s-cache
-            mountPath: /shark-cache
+            mountPath: /amdshark-cache
             readOnly: False
 
     volumes:
