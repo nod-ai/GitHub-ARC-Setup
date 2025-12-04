@@ -4,10 +4,6 @@ metadata:
     name: bazelremote-svc
     namespace: bazelremote-ns
 spec:
-    clusterIP: 10.0.3.202
-    clusterIPs:
-    - 10.0.3.202
-    internalTrafficPolicy: Cluster
     selector:
       app: bazelremote
     ports:
